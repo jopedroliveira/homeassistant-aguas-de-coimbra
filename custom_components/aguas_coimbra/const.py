@@ -47,21 +47,21 @@ SENSOR_TYPES: Final = {
         "icon": "mdi:water",
         "unit": "L",
         "device_class": "water",
-        "state_class": "total",
+        "state_class": "measurement",  # Changed from "total" to fix negative value issue
     },
     SENSOR_WEEKLY_CONSUMPTION: {
         "name": "Weekly Consumption",
         "icon": "mdi:water-outline",
         "unit": "L",
         "device_class": "water",
-        "state_class": "total",
+        "state_class": "measurement",  # Changed from "total" to fix negative value issue
     },
     SENSOR_MONTHLY_CONSUMPTION: {
         "name": "Monthly Consumption",
         "icon": "mdi:water-circle",
         "unit": "L",
         "device_class": "water",
-        "state_class": "total",
+        "state_class": "measurement",  # Changed from "total" to fix negative value issue
     },
 }
 
