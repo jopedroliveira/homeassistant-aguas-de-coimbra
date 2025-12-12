@@ -5,3 +5,4 @@
 LOGIN_URL='https://bdigital.aguasdecoimbra.pt/uPortal2/coimbra/index.html#/login'
 LOGIN_USERNAME='your-email@example.com'
 LOGIN_PASSWORD='your-password-here'
+
