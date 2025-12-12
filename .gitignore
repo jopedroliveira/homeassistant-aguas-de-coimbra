@@ -1,0 +1,59 @@
+# HAR files (contain sensitive data)
+bdigital.aguasdecoimbra.pt.har
+*.har
+
+# Credentials and scripts
+cookies.txt
+cookiesti.txt
+fetch.sh
+script.js
+.envrc
+*.envrc
+!.envrc.example
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.bak
+
+# Virtual Environment
+venv/
+ENV/
+env/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Logs
+*.log
+
+# Claude settings
+.claude/
+
+# Tool versions
+.tool-versions
+
+# Test files (for local development only)
+test_integration.py
+test_api.py
+test_list_subscriptions.py
+test_subscription_discovery.py
+requirements-test.txt
+TESTING.md
+run_test.sh
+
+# Deployment packages
+*.tar.gz
+*.zip
+aguas_coimbra-*
+
+# Internal documentation
+PRIVACY_CLEANUP.md

@@ -1,0 +1,67 @@
+name: Create Release
+
+on:
+  push:
+    branches:
+      - main
+    tags:
+      - 'v*'
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Get version from manifest
+        id: get_version
+        run: |
+          VERSION=$(grep '"version"' custom_components/aguas_coimbra/manifest.json | sed 's/.*"version": "\(.*\)".*/\1/')
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Version: $VERSION"
+
+      - name: Create integration package
+        run: |
+          cd custom_components
+          tar -czf aguas_coimbra-${{ steps.get_version.outputs.version }}.tar.gz aguas_coimbra/
+          zip -r aguas_coimbra-${{ steps.get_version.outputs.version }}.zip aguas_coimbra/
+          cd ..
+          mv custom_components/aguas_coimbra-${{ steps.get_version.outputs.version }}.tar.gz .
+          mv custom_components/aguas_coimbra-${{ steps.get_version.outputs.version }}.zip .
+
+      - name: Create Release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            aguas_coimbra-${{ steps.get_version.outputs.version }}.tar.gz
+            aguas_coimbra-${{ steps.get_version.outputs.version }}.zip
+          body: |
+            ## Águas de Coimbra Integration v${{ steps.get_version.outputs.version }}
+
+            ### Installation
+
+            Download and extract to your Home Assistant `custom_components` directory.
+
+            See [README.md](https://github.com/${{ github.repository }}/blob/main/README.md) for detailed installation and configuration instructions.
+
+            ### Files
+
+            - `aguas_coimbra-${{ steps.get_version.outputs.version }}.tar.gz` - Tarball package
+            - `aguas_coimbra-${{ steps.get_version.outputs.version }}.zip` - ZIP package
+          draft: false
+          prerelease: false
+
+      - name: Upload artifacts (for non-tag pushes)
+        if: "!startsWith(github.ref, 'refs/tags/')"
+        uses: actions/upload-artifact@v4
+        with:
+          name: aguas_coimbra-${{ steps.get_version.outputs.version }}
+          path: |
+            aguas_coimbra-${{ steps.get_version.outputs.version }}.tar.gz
+            aguas_coimbra-${{ steps.get_version.outputs.version }}.zip
+          retention-days: 30

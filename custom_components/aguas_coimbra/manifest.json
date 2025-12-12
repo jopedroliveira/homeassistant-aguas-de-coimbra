@@ -1,0 +1,12 @@
+{
+  "domain": "aguas_coimbra",
+  "name": "Águas de Coimbra",
+  "codeowners": ["@jopedroliveira"],
+  "config_flow": true,
+  "dependencies": [],
+  "documentation": "https://github.com/jopedroliveira/homeassistant-aguas-de-coimbra",
+  "integration_type": "hub",
+  "iot_class": "cloud_polling",
+  "requirements": ["aiohttp>=3.9.0"],
+  "version": "1.0.1"
+}

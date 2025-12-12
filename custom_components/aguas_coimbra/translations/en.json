@@ -1,0 +1,32 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Setup Águas de Coimbra",
+        "description": "Enter your Águas de Coimbra portal credentials and meter number. The subscription ID will be auto-discovered if possible.",
+        "data": {
+          "username": "Email",
+          "password": "Password",
+          "meter_number": "Meter Number",
+          "subscription_id": "Subscription ID (optional - leave blank to auto-discover)"
+        }
+      },
+      "subscription": {
+        "title": "Subscription ID Required",
+        "description": "{info}",
+        "data": {
+          "subscription_id": "Subscription ID"
+        }
+      }
+    },
+    "error": {
+      "auth_failed": "Authentication failed. Please check your credentials.",
+      "cannot_connect": "Unable to connect to Águas de Coimbra. Please check your internet connection.",
+      "invalid_response": "Received invalid response from the server.",
+      "unknown": "An unexpected error occurred."
+    },
+    "abort": {
+      "already_configured": "This meter is already configured."
+    }
+  }
+}
