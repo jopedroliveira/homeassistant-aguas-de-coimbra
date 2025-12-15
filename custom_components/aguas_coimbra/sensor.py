@@ -145,18 +145,23 @@ class AguasCoimbraCumulativeSensor(AguasCoimbraSensorBase, RestoreEntity):
                     "Restored cumulative total: %.2f L from previous state",
                     self._cumulative_value
                 )
-            except (ValueError, TypeError):
-                _LOGGER.warning("Could not restore cumulative total, starting from 0")
-                self._cumulative_value = 0.0
 
-            # Restore last processed date from attributes
-            if last_state.attributes:
-                self._last_processed_date = last_state.attributes.get("last_processed_date")
-                if self._last_processed_date:
-                    _LOGGER.info(
-                        "Restored last processed date: %s",
-                        self._last_processed_date
-                    )
+                # Only restore last processed date if cumulative value restoration succeeded
+                # This prevents data loss from skipping readings while starting cumulative at 0
+                if last_state.attributes:
+                    self._last_processed_date = last_state.attributes.get("last_processed_date")
+                    if self._last_processed_date:
+                        _LOGGER.info(
+                            "Restored last processed date: %s",
+                            self._last_processed_date
+                        )
+            except (ValueError, TypeError):
+                _LOGGER.warning(
+                    "Could not restore cumulative total, starting fresh from 0. "
+                    "Last processed date will not be restored to avoid data loss."
+                )
+                self._cumulative_value = 0.0
+                self._last_processed_date = None
 
     @property
     def native_value(self) -> float | None:
