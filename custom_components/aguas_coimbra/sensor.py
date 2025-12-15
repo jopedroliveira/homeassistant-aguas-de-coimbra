@@ -162,7 +162,9 @@ class AguasCoimbraCumulativeSensor(AguasCoimbraSensorBase, RestoreEntity):
     def native_value(self) -> float | None:
         """Return the state of the sensor."""
         if not self.coordinator.data:
-            return None
+            # Return restored cumulative value even when coordinator data unavailable
+            # This ensures the sensor displays the last known value after restart
+            return self._cumulative_value if self._cumulative_value > 0 else None
 
         # Get all readings from coordinator
         all_readings = self.coordinator.data.get("all_readings", [])
