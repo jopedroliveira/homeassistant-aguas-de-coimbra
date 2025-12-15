@@ -168,13 +168,19 @@ class AguasCoimbraCumulativeSensor(AguasCoimbraSensorBase, RestoreEntity):
         """Return the state of the sensor."""
         if not self.coordinator.data:
             # Return restored cumulative value even when coordinator data unavailable
-            # This ensures the sensor displays the last known value after restart
-            return self._cumulative_value if self._cumulative_value > 0 else None
+            # Return None only if we've never processed any data
+            if self._last_processed_date is None and self._cumulative_value == 0:
+                return None
+            return self._cumulative_value
 
         # Get all readings from coordinator
         all_readings = self.coordinator.data.get("all_readings", [])
         if not all_readings:
-            return self._cumulative_value if self._cumulative_value > 0 else None
+            # Return current cumulative value (could be 0 or restored value)
+            # Return None only if we've never processed any data
+            if self._last_processed_date is None and self._cumulative_value == 0:
+                return None
+            return self._cumulative_value
 
         # Calculate incremental consumption from NEW readings only
         incremental = 0.0
@@ -207,17 +213,27 @@ class AguasCoimbraCumulativeSensor(AguasCoimbraSensorBase, RestoreEntity):
                 continue
 
         # Update cumulative value and last processed date
-        if incremental > 0:
-            self._cumulative_value += incremental
+        # Important: Update last_processed_date even if incremental is 0
+        # This marks that we've successfully processed readings
+        if most_recent_date is not None and most_recent_date != self._last_processed_date:
+            if incremental > 0:
+                self._cumulative_value += incremental
+                _LOGGER.debug(
+                    "Added %.2f L to cumulative total (new total: %.2f L, last date: %s)",
+                    incremental,
+                    self._cumulative_value,
+                    most_recent_date
+                )
+            else:
+                _LOGGER.debug(
+                    "No new consumption to add, but updating last processed date to %s",
+                    most_recent_date
+                )
             self._last_processed_date = most_recent_date
-            _LOGGER.debug(
-                "Added %.2f L to cumulative total (new total: %.2f L, last date: %s)",
-                incremental,
-                self._cumulative_value,
-                self._last_processed_date
-            )
 
-        return self._cumulative_value if self._cumulative_value > 0 else None
+        # Return cumulative value (can be 0 after processing readings with 0 consumption)
+        # Only return None if we've truly never processed any data
+        return self._cumulative_value
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
