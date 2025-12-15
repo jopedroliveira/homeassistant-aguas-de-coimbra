@@ -29,6 +29,7 @@ CONF_HISTORY_DAYS: Final = "history_days"
 
 # Sensor Types
 SENSOR_LATEST_READING: Final = "latest_reading"
+SENSOR_CUMULATIVE_TOTAL: Final = "cumulative_total"
 SENSOR_DAILY_CONSUMPTION: Final = "daily_consumption"
 SENSOR_WEEKLY_CONSUMPTION: Final = "weekly_consumption"
 SENSOR_MONTHLY_CONSUMPTION: Final = "monthly_consumption"
@@ -40,6 +41,13 @@ SENSOR_TYPES: Final = {
         "icon": "mdi:water",
         "unit": "L",
         "device_class": "water",
+        "state_class": "measurement",
+    },
+    SENSOR_CUMULATIVE_TOTAL: {
+        "name": "Cumulative Total",
+        "icon": "mdi:counter",
+        "unit": "L",
+        "device_class": "water",
         "state_class": "total_increasing",
     },
     SENSOR_DAILY_CONSUMPTION: {
@@ -47,21 +55,21 @@ SENSOR_TYPES: Final = {
         "icon": "mdi:water",
         "unit": "L",
         "device_class": "water",
-        "state_class": "measurement",  # Changed from "total" to fix negative value issue
+        "state_class": "total",
     },
     SENSOR_WEEKLY_CONSUMPTION: {
         "name": "Weekly Consumption",
         "icon": "mdi:water-outline",
         "unit": "L",
         "device_class": "water",
-        "state_class": "measurement",  # Changed from "total" to fix negative value issue
+        "state_class": "total",
     },
     SENSOR_MONTHLY_CONSUMPTION: {
         "name": "Monthly Consumption",
         "icon": "mdi:water-circle",
         "unit": "L",
         "device_class": "water",
-        "state_class": "measurement",  # Changed from "total" to fix negative value issue
+        "state_class": "total",
     },
 }
 

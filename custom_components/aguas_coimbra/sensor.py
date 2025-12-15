@@ -12,6 +12,7 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
     DOMAIN,
+    SENSOR_CUMULATIVE_TOTAL,
     SENSOR_DAILY_CONSUMPTION,
     SENSOR_LATEST_READING,
     SENSOR_MONTHLY_CONSUMPTION,
@@ -33,6 +34,7 @@ async def async_setup_entry(
 
     entities = [
         AguasCoimbraLatestReadingSensor(coordinator, entry),
+        AguasCoimbraCumulativeSensor(coordinator, entry),
         AguasCoimbraDailySensor(coordinator, entry),
         AguasCoimbraWeeklySensor(coordinator, entry),
         AguasCoimbraMonthlySensor(coordinator, entry),
@@ -107,6 +109,25 @@ class AguasCoimbraLatestReadingSensor(AguasCoimbraSensorBase):
             "cil": self.coordinator.data.get("cil"),
             "meter_number": self.coordinator.data.get("meter_number"),
         }
+
+
+class AguasCoimbraCumulativeSensor(AguasCoimbraSensorBase):
+    """Sensor for cumulative water consumption total."""
+
+    def __init__(
+        self,
+        coordinator: AguasCoimbraDataUpdateCoordinator,
+        entry: ConfigEntry,
+    ) -> None:
+        """Initialize the sensor."""
+        super().__init__(coordinator, entry, SENSOR_CUMULATIVE_TOTAL)
+
+    @property
+    def native_value(self) -> float | None:
+        """Return the state of the sensor."""
+        if self.coordinator.data:
+            return self.coordinator.data.get("cumulative_total")
+        return None
 
 
 class AguasCoimbraDailySensor(AguasCoimbraSensorBase):

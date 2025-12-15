@@ -5,13 +5,15 @@ This is a Home Assistant custom integration for monitoring water consumption fro
 ## Features
 
 - Real-time water consumption monitoring
-- Four sensors:
+- Five sensors:
   - Latest Reading: Most recent consumption value
+  - Cumulative Total: Total cumulative consumption (for Energy dashboard)
   - Daily Consumption: Total consumption for today
   - Weekly Consumption: Total consumption for the last 7 days
   - Monthly Consumption: Total consumption for the current month
 - Automatic updates every 15 minutes
 - Secure credential storage
+- Properly configured for Home Assistant Energy Dashboard
 
 ## Installation
 
@@ -135,6 +137,7 @@ logger:
 After successful setup, you'll have these sensors:
 
 - `sensor.aguas_coimbra_latest_reading` - Latest consumption reading (L)
+- `sensor.aguas_coimbra_cumulative_total` - Cumulative total consumption (L) - Use this for Energy Dashboard
 - `sensor.aguas_coimbra_daily_consumption` - Today's total (L)
 - `sensor.aguas_coimbra_weekly_consumption` - Last 7 days total (L)
 - `sensor.aguas_coimbra_monthly_consumption` - Current month total (L)
@@ -143,7 +146,8 @@ After successful setup, you'll have these sensors:
 
 The sensors are configured to work with Home Assistant's Energy Dashboard:
 
-- **Latest Reading**: Cumulative meter reading (state_class: total_increasing)
+- **Latest Reading**: Individual consumption reading (state_class: measurement)
+- **Cumulative Total**: Total cumulative consumption (state_class: total_increasing) - **Recommended for Energy Dashboard**
 - **Daily Consumption**: Today's consumption total (state_class: total)
 - **Weekly Consumption**: Last 7 days consumption (state_class: total)
 - **Monthly Consumption**: Current month consumption (state_class: total)
@@ -152,16 +156,26 @@ To add to the Energy Dashboard:
 
 1. Go to Settings → Dashboards → Energy
 2. Click "Add Consumption"
-3. Select the sensor you want to track (e.g., `sensor.aguas_de_coimbra_<your_meter>_daily_consumption`)
+3. Select `sensor.aguas_de_coimbra_<your_meter>_cumulative_total` for long-term tracking
+
+### Important Notes on Sensor Configuration
+
+- **Use Cumulative Total for Energy Dashboard**: This sensor uses `state_class: total_increasing` which is the correct configuration for tracking cumulative consumption over time. It will never decrease, preventing negative values in statistics.
+- **Daily/Weekly/Monthly sensors**: These use `state_class: total` and reset at period boundaries. They're useful for monitoring specific time periods but not recommended for the main Energy Dashboard tracking.
+- **Latest Reading**: This shows individual consumption readings and uses `state_class: measurement` for informational purposes only.
 
 ## Development Status
 
-This is version 1.0.1 - improved setup and energy dashboard support.
+This is version 1.0.2 - fixed negative consumption issue and improved energy dashboard support.
 
 ### Recent Updates
 
+- ✅ Fixed negative water consumption in Energy Dashboard
+- ✅ Added Cumulative Total sensor with proper `state_class: total_increasing`
+- ✅ Fixed state_class configuration for all sensors
+- ✅ Daily/Weekly/Monthly sensors now use `state_class: total`
+- ✅ Latest Reading sensor changed to `state_class: measurement`
 - ✅ Auto-discovery of subscription ID (when possible)
-- ✅ Fixed state_class for energy dashboard compatibility
 - ✅ Simplified setup process (email, password, and meter number required)
 
 ### Known Limitations
