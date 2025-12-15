@@ -179,21 +179,21 @@ class AguasCoimbraCumulativeSensor(AguasCoimbraSensorBase, RestoreEntity):
                 if not reading_date_str:
                     continue
 
-                # Parse the date (handle timezone offsets)
+                # Normalize the date string (remove timezone offsets for consistent comparison)
                 reading_date_str_clean = reading_date_str.replace("+00:00", "").replace("+01:00", "")
 
                 # If we have a last processed date, only count readings newer than it
                 if self._last_processed_date:
-                    if reading_date_str <= self._last_processed_date:
+                    if reading_date_str_clean <= self._last_processed_date:
                         continue  # Skip already processed readings
 
                 # Add this reading's consumption
                 consumption = reading.get("consumption", 0)
                 incremental += consumption
 
-                # Track the most recent reading date
-                if most_recent_date is None or reading_date_str > most_recent_date:
-                    most_recent_date = reading_date_str
+                # Track the most recent reading date (use normalized version)
+                if most_recent_date is None or reading_date_str_clean > most_recent_date:
+                    most_recent_date = reading_date_str_clean
 
             except (ValueError, KeyError, TypeError) as err:
                 _LOGGER.warning("Error processing reading for cumulative total: %s", err)
