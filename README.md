@@ -158,11 +158,36 @@ To add to the Energy Dashboard:
 2. Click "Add Consumption"
 3. Select `sensor.aguas_de_coimbra_<your_meter>_cumulative_total` for long-term tracking
 
+### Migration from Previous Versions
+
+If you were previously using a different sensor in the Energy Dashboard and experienced negative consumption values, you should:
+
+1. **Remove the old sensor** from your Energy Dashboard configuration
+2. **Add the new Cumulative Total sensor** (`sensor.aguas_coimbra_cumulative_total`)
+3. **(Optional) Clean up old statistics** if you want to remove corrupted data:
+   ```yaml
+   service: recorder.purge_entities
+   data:
+     entity_id: sensor.aguas_coimbra_latest_reading
+     keep_days: 0
+   ```
+
+The Cumulative Total sensor starts fresh and will build up accurate long-term statistics going forward.
+
 ### Important Notes on Sensor Configuration
 
-- **Use Cumulative Total for Energy Dashboard**: This sensor uses `state_class: total_increasing` which is the correct configuration for tracking cumulative consumption over time. It will never decrease, preventing negative values in statistics.
+- **Use Cumulative Total for Energy Dashboard**: This sensor uses `state_class: total_increasing` which is the correct configuration for tracking cumulative consumption over time. It maintains a persistent state across restarts and only adds consumption from NEW readings (not previously counted). This ensures the value never decreases, even as old readings fall off the API's 90-day rolling window, preventing negative values in long-term statistics.
 - **Daily/Weekly/Monthly sensors**: These use `state_class: total` and reset at period boundaries. They're useful for monitoring specific time periods but not recommended for the main Energy Dashboard tracking.
 - **Latest Reading**: This shows individual consumption readings and uses `state_class: measurement` for informational purposes only.
+
+### How the Cumulative Total Works
+
+The Cumulative Total sensor is designed to work correctly with Home Assistant's Energy Dashboard by ensuring the value only ever increases:
+
+1. **State Persistence**: The sensor saves its cumulative value and tracks the last reading date it processed
+2. **Incremental Updates**: On each update, it only adds consumption from readings newer than the last processed date
+3. **Never Decreases**: As old readings fall off the API's 90-day window, the cumulative value remains unchanged since those readings were already counted
+4. **Survives Restarts**: The sensor restores its last value when Home Assistant restarts, ensuring no data loss
 
 ## Development Status
 
@@ -172,6 +197,9 @@ This is version 1.0.2 - fixed negative consumption issue and improved energy das
 
 - ✅ Fixed negative water consumption in Energy Dashboard
 - ✅ Added Cumulative Total sensor with proper `state_class: total_increasing`
+  - Implements state persistence and incremental updates
+  - Only counts NEW readings, never recalculates from scratch
+  - Guaranteed to never decrease, even as old data falls off API window
 - ✅ Fixed state_class configuration for all sensors
 - ✅ Daily/Weekly/Monthly sensors now use `state_class: total`
 - ✅ Latest Reading sensor changed to `state_class: measurement`

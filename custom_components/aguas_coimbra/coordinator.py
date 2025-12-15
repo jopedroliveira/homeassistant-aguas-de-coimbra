@@ -67,7 +67,6 @@ class AguasCoimbraDataUpdateCoordinator(DataUpdateCoordinator):
             _LOGGER.warning("No consumption data received")
             return {
                 "latest_reading": None,
-                "cumulative_total": 0,
                 "daily_total": 0,
                 "weekly_total": 0,
                 "monthly_total": 0,
@@ -94,8 +93,7 @@ class AguasCoimbraDataUpdateCoordinator(DataUpdateCoordinator):
         week_start = today_start - timedelta(days=7)
         month_start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
 
-        # Calculate totals
-        cumulative_total = 0
+        # Calculate totals for time-based sensors
         daily_total = 0
         weekly_total = 0
         monthly_total = 0
@@ -106,9 +104,6 @@ class AguasCoimbraDataUpdateCoordinator(DataUpdateCoordinator):
                     reading["date"].replace("+00:00", "").replace("+01:00", "")
                 )
                 consumption = reading.get("consumption", 0)
-
-                # Cumulative total (all available data)
-                cumulative_total += consumption
 
                 # Daily total (today only)
                 if reading_date >= today_start:
@@ -128,12 +123,11 @@ class AguasCoimbraDataUpdateCoordinator(DataUpdateCoordinator):
 
         return {
             "latest_reading": latest_reading,
-            "cumulative_total": cumulative_total,
             "daily_total": daily_total,
             "weekly_total": weekly_total,
             "monthly_total": monthly_total,
             "last_reading_date": last_reading_date,
             "cil": cil,
             "meter_number": self.meter_number,
-            "all_readings": sorted_data[:100],  # Keep last 100 readings
+            "all_readings": sorted_data[:100],  # Keep last 100 readings for cumulative sensor
         }
