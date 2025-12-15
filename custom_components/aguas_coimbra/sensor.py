@@ -1,17 +1,20 @@
 """Sensor platform for Águas de Coimbra."""
 from __future__ import annotations
 
+from datetime import datetime
 import logging
 from typing import Any
 
-from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
+from homeassistant.components.sensor import SensorEntity, SensorEntityDescription, SensorStateClass
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
     DOMAIN,
+    SENSOR_CUMULATIVE_TOTAL,
     SENSOR_DAILY_CONSUMPTION,
     SENSOR_LATEST_READING,
     SENSOR_MONTHLY_CONSUMPTION,
@@ -33,6 +36,7 @@ async def async_setup_entry(
 
     entities = [
         AguasCoimbraLatestReadingSensor(coordinator, entry),
+        AguasCoimbraCumulativeSensor(coordinator, entry),
         AguasCoimbraDailySensor(coordinator, entry),
         AguasCoimbraWeeklySensor(coordinator, entry),
         AguasCoimbraMonthlySensor(coordinator, entry),
@@ -106,6 +110,120 @@ class AguasCoimbraLatestReadingSensor(AguasCoimbraSensorBase):
             "last_reading_date": self.coordinator.data.get("last_reading_date"),
             "cil": self.coordinator.data.get("cil"),
             "meter_number": self.coordinator.data.get("meter_number"),
+        }
+
+
+class AguasCoimbraCumulativeSensor(AguasCoimbraSensorBase, RestoreEntity):
+    """Sensor for cumulative water consumption total.
+
+    This sensor maintains a monotonically increasing cumulative total by:
+    - Restoring its last state value on startup
+    - Tracking the last processed reading timestamp
+    - Only adding consumption from new readings (not yet counted)
+    - Never decreasing, even as old readings fall off the API's rolling window
+    """
+
+    def __init__(
+        self,
+        coordinator: AguasCoimbraDataUpdateCoordinator,
+        entry: ConfigEntry,
+    ) -> None:
+        """Initialize the sensor."""
+        super().__init__(coordinator, entry, SENSOR_CUMULATIVE_TOTAL)
+        self._cumulative_value: float = 0.0
+        self._last_processed_date: str | None = None
+
+    async def async_added_to_hass(self) -> None:
+        """Restore last state when entity is added to hass."""
+        await super().async_added_to_hass()
+
+        # Restore the last cumulative value and last processed date
+        if (last_state := await self.async_get_last_state()) is not None:
+            try:
+                self._cumulative_value = float(last_state.state)
+                _LOGGER.info(
+                    "Restored cumulative total: %.2f L from previous state",
+                    self._cumulative_value
+                )
+
+                # Only restore last processed date if cumulative value restoration succeeded
+                # This prevents data loss from skipping readings while starting cumulative at 0
+                if last_state.attributes:
+                    self._last_processed_date = last_state.attributes.get("last_processed_date")
+                    if self._last_processed_date:
+                        _LOGGER.info(
+                            "Restored last processed date: %s",
+                            self._last_processed_date
+                        )
+            except (ValueError, TypeError):
+                _LOGGER.warning(
+                    "Could not restore cumulative total, starting fresh from 0. "
+                    "Last processed date will not be restored to avoid data loss."
+                )
+                self._cumulative_value = 0.0
+                self._last_processed_date = None
+
+    @property
+    def native_value(self) -> float | None:
+        """Return the state of the sensor."""
+        if not self.coordinator.data:
+            # Return restored cumulative value even when coordinator data unavailable
+            # This ensures the sensor displays the last known value after restart
+            return self._cumulative_value if self._cumulative_value > 0 else None
+
+        # Get all readings from coordinator
+        all_readings = self.coordinator.data.get("all_readings", [])
+        if not all_readings:
+            return self._cumulative_value if self._cumulative_value > 0 else None
+
+        # Calculate incremental consumption from NEW readings only
+        incremental = 0.0
+        most_recent_date = self._last_processed_date
+
+        for reading in all_readings:
+            try:
+                reading_date_str = reading.get("date", "")
+                if not reading_date_str:
+                    continue
+
+                # Normalize the date string (remove timezone offsets for consistent comparison)
+                reading_date_str_clean = reading_date_str.replace("+00:00", "").replace("+01:00", "")
+
+                # If we have a last processed date, only count readings newer than it
+                if self._last_processed_date:
+                    if reading_date_str_clean <= self._last_processed_date:
+                        continue  # Skip already processed readings
+
+                # Add this reading's consumption
+                consumption = reading.get("consumption", 0)
+                incremental += consumption
+
+                # Track the most recent reading date (use normalized version)
+                if most_recent_date is None or reading_date_str_clean > most_recent_date:
+                    most_recent_date = reading_date_str_clean
+
+            except (ValueError, KeyError, TypeError) as err:
+                _LOGGER.warning("Error processing reading for cumulative total: %s", err)
+                continue
+
+        # Update cumulative value and last processed date
+        if incremental > 0:
+            self._cumulative_value += incremental
+            self._last_processed_date = most_recent_date
+            _LOGGER.debug(
+                "Added %.2f L to cumulative total (new total: %.2f L, last date: %s)",
+                incremental,
+                self._cumulative_value,
+                self._last_processed_date
+            )
+
+        return self._cumulative_value if self._cumulative_value > 0 else None
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any]:
+        """Return additional attributes."""
+        return {
+            "last_processed_date": self._last_processed_date,
         }
 
 

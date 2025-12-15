@@ -93,7 +93,7 @@ class AguasCoimbraDataUpdateCoordinator(DataUpdateCoordinator):
         week_start = today_start - timedelta(days=7)
         month_start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
 
-        # Calculate totals
+        # Calculate totals for time-based sensors
         daily_total = 0
         weekly_total = 0
         monthly_total = 0
@@ -129,5 +129,5 @@ class AguasCoimbraDataUpdateCoordinator(DataUpdateCoordinator):
             "last_reading_date": last_reading_date,
             "cil": cil,
             "meter_number": self.meter_number,
-            "all_readings": sorted_data[:100],  # Keep last 100 readings
+            "all_readings": sorted_data[:100],  # Keep last 100 readings for cumulative sensor
         }
