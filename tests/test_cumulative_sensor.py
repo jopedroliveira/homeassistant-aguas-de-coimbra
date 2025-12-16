@@ -1,11 +1,10 @@
-#!/usr/bin/env python3
 """Test script for cumulative sensor logic."""
 import asyncio
 from datetime import datetime
 import aiohttp
 
 # Import the API
-from test_api import AguasCoimbraAPI
+from .test_api import AguasCoimbraAPI
 
 
 class MockCoordinatorData:

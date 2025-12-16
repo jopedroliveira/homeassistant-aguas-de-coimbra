@@ -3,7 +3,7 @@ import asyncio
 import logging
 import sys
 from datetime import datetime, timedelta
-from test_api import AguasCoimbraAPI
+from tests.test_api import AguasCoimbraAPI
 import aiohttp
 
 logging.basicConfig(

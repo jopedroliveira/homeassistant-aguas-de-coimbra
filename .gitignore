@@ -42,13 +42,17 @@ env/
 .tool-versions
 
 # Test files (for local development only)
-test_integration.py
-test_api.py
-test_list_subscriptions.py
-test_subscription_discovery.py
+/test_integration.py
+/test_api.py
+/test_list_subscriptions.py
+/test_subscription_discovery.py
 requirements-test.txt
 TESTING.md
 run_test.sh
+
+# Allow test files in tests/ directory (as a proper Python package)
+!/tests/test_*.py
+!/tests/check_*.py
 
 # Deployment packages
 *.tar.gz
