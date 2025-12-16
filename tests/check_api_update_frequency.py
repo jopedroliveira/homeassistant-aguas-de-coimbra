@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """Check how frequently the Águas de Coimbra API provides new readings."""
 import asyncio
 from datetime import datetime

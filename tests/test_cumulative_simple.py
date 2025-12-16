@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """Simple test of cumulative sensor logic with mock data."""
 from datetime import datetime, timedelta
 
