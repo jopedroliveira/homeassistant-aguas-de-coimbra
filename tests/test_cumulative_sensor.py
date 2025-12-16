@@ -5,7 +5,7 @@ from datetime import datetime
 import aiohttp
 
 # Import the API
-from test_api import AguasCoimbraAPI
+from .test_api import AguasCoimbraAPI
 
 
 class MockCoordinatorData:
